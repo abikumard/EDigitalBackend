@@ -57,6 +57,7 @@ public class SecurityConfig {
                     .accessDeniedHandler((req, res, e) -> writeError(res, HttpStatus.FORBIDDEN, "You do not have access to this resource"))
             )
             .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/health").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/admin/auth/login").permitAll()
                     .requestMatchers("/api/payments/webhook").permitAll()
