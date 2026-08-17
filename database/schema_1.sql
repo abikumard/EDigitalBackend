@@ -89,6 +89,22 @@ CREATE TABLE IF NOT EXISTS content_items (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------
+-- Extra files bundled onto a product — e.g. a "3 photos" pack, or a
+-- couple of bonus PDFs alongside the main file. A product's core price/
+-- access/thumbnail still lives on content_items; this just adds more
+-- downloadable files under the same purchase.
+-- ---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS content_files (
+    id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content_item_id     BIGINT NOT NULL,
+    file_type           VARCHAR(20) NOT NULL,
+    file_path           VARCHAR(500) NOT NULL,
+    original_file_name  VARCHAR(255) NULL,
+    label               VARCHAR(150) NULL,
+    CONSTRAINT fk_content_file_item FOREIGN KEY (content_item_id) REFERENCES content_items(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------
 -- Purchases (Razorpay orders/payments)
 -- status: CREATED | SUCCESS | FAILED
 -- ---------------------------------------------------------

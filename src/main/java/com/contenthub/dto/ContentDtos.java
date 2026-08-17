@@ -4,8 +4,16 @@ import com.contenthub.entity.ContentItem;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ContentDtos {
+
+    public record ContentFileResponse(
+            Long id,
+            String fileType,
+            String label,
+            String url
+    ) {}
 
     public record ContentResponse(
             Long id,
@@ -17,13 +25,19 @@ public class ContentDtos {
             boolean active,
             boolean purchased,
             LocalDateTime createdAt,
-            LocalDateTime purchasedAt
+            LocalDateTime purchasedAt,
+            List<ContentFileResponse> extraFiles
     ) {
         public static ContentResponse of(ContentItem c, boolean purchased) {
-            return of(c, purchased, null);
+            return of(c, purchased, null, List.of());
         }
 
         public static ContentResponse of(ContentItem c, boolean purchased, LocalDateTime purchasedAt) {
+            return of(c, purchased, purchasedAt, List.of());
+        }
+
+        public static ContentResponse of(ContentItem c, boolean purchased, LocalDateTime purchasedAt,
+                                          List<ContentFileResponse> extraFiles) {
             return new ContentResponse(
                     c.getId(),
                     c.getTitle(),
@@ -34,7 +48,8 @@ public class ContentDtos {
                     c.isActive(),
                     purchased,
                     c.getCreatedAt(),
-                    purchasedAt
+                    purchasedAt,
+                    extraFiles
             );
         }
     }

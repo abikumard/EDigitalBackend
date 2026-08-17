@@ -1,8 +1,11 @@
 package com.contenthub.controller;
 
+import com.contenthub.entity.ContentFile;
 import com.contenthub.entity.ContentItem;
 import com.contenthub.exception.AppExceptions.PaymentException;
+import com.contenthub.exception.AppExceptions.ResourceNotFoundException;
 import com.contenthub.exception.AppExceptions.UnauthorizedException;
+import com.contenthub.repository.ContentFileRepository;
 import com.contenthub.security.AuthPrincipal;
 import com.contenthub.security.CurrentUser;
 import com.contenthub.service.ContentService;
@@ -26,11 +29,14 @@ public class ContentFileController {
     private final ContentService contentService;
     private final FileStorageService fileStorageService;
     private final PaymentService paymentService;
+    private final ContentFileRepository contentFileRepository;
 
-    public ContentFileController(ContentService contentService, FileStorageService fileStorageService, PaymentService paymentService) {
+    public ContentFileController(ContentService contentService, FileStorageService fileStorageService,
+                                  PaymentService paymentService, ContentFileRepository contentFileRepository) {
         this.contentService = contentService;
         this.fileStorageService = fileStorageService;
         this.paymentService = paymentService;
+        this.contentFileRepository = contentFileRepository;
     }
 
     @GetMapping("/{id}/thumbnail")
@@ -48,19 +54,41 @@ public class ContentFileController {
     public ResponseEntity<ResourceRegion> streamFile(@PathVariable Long id,
                                                        @RequestHeader HttpHeaders headers,
                                                        Authentication authentication) throws IOException {
+        ContentItem item = contentService.getEntityOrThrow(id);
+        requireAccess(id, authentication);
+        String downloadName = item.getOriginalFileName() != null ? item.getOriginalFileName() : item.getTitle();
+        return streamPath(fileStorageService.resolve(item.getFilePath()), downloadName, headers);
+    }
+
+    // Extra files bundled onto a product (e.g. photo 2, photo 3, a bonus PDF)
+    // — same purchase-gated access as the main file, just a different row.
+    @GetMapping("/{id}/files/{fileId}")
+    public ResponseEntity<ResourceRegion> streamExtraFile(@PathVariable Long id,
+                                                            @PathVariable Long fileId,
+                                                            @RequestHeader HttpHeaders headers,
+                                                            Authentication authentication) throws IOException {
+        requireAccess(id, authentication);
+        ContentFile extra = contentFileRepository.findById(fileId)
+                .orElseThrow(() -> new ResourceNotFoundException("File not found"));
+        if (!extra.getContentItem().getId().equals(id)) {
+            throw new ResourceNotFoundException("File not found");
+        }
+        String downloadName = extra.getOriginalFileName() != null ? extra.getOriginalFileName() : "file";
+        return streamPath(fileStorageService.resolve(extra.getFilePath()), downloadName, headers);
+    }
+
+    private void requireAccess(Long contentId, Authentication authentication) {
         AuthPrincipal principal = CurrentUser.from(authentication);
         if (principal == null) {
             throw new UnauthorizedException("Please log in to continue.");
         }
-
-        ContentItem item = contentService.getEntityOrThrow(id);
-
-        boolean allowed = principal.isAdmin() || paymentService.hasAccess(principal.getUserId(), id);
+        boolean allowed = principal.isAdmin() || paymentService.hasAccess(principal.getUserId(), contentId);
         if (!allowed) {
             throw new PaymentException("Please purchase this content to access it.");
         }
+    }
 
-        Path path = fileStorageService.resolve(item.getFilePath());
+    private ResponseEntity<ResourceRegion> streamPath(Path path, String downloadName, HttpHeaders headers) throws IOException {
         FileSystemResource resource = new FileSystemResource(path);
         long contentLength = resource.contentLength();
         MediaType mediaType = detectMediaType(path);
@@ -77,8 +105,6 @@ public class ContentFileController {
             region = range.toResourceRegion(resource);
             status = HttpStatus.PARTIAL_CONTENT;
         }
-
-        String downloadName = item.getOriginalFileName() != null ? item.getOriginalFileName() : (item.getTitle());
 
         return ResponseEntity.status(status)
                 .contentType(mediaType)

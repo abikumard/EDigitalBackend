@@ -27,6 +27,11 @@ public class AdminContentController {
         return ResponseEntity.ok(contentService.adminListAll());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ContentResponse> getOne(@PathVariable Long id) {
+        return ResponseEntity.ok(contentService.adminGetOne(id));
+    }
+
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ContentResponse> create(
             @RequestParam String title,
@@ -59,6 +64,22 @@ public class AdminContentController {
     public ResponseEntity<MessageResponse> delete(@PathVariable Long id) {
         contentService.adminDelete(id);
         return ResponseEntity.ok(new MessageResponse("Content deleted."));
+    }
+
+    @PostMapping(value = "/{id}/files", consumes = "multipart/form-data")
+    public ResponseEntity<ContentResponse> addExtraFile(
+            @PathVariable Long id,
+            @RequestParam String fileType,
+            @RequestParam(required = false) String label,
+            @RequestParam("file") MultipartFile file
+    ) {
+        ContentItem.ContentType type = parseType(fileType);
+        return ResponseEntity.ok(contentService.adminAddExtraFile(id, type, label, file));
+    }
+
+    @DeleteMapping("/{id}/files/{fileId}")
+    public ResponseEntity<ContentResponse> removeExtraFile(@PathVariable Long id, @PathVariable Long fileId) {
+        return ResponseEntity.ok(contentService.adminRemoveExtraFile(id, fileId));
     }
 
     private ContentItem.ContentType parseType(String value) {
