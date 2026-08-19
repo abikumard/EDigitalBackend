@@ -31,6 +31,28 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------
+-- Seller applications (KYC). One row per user who has applied to sell.
+-- status: PENDING | APPROVED | REJECTED — reviewed by admin only.
+-- ---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sellers (
+    id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id                 BIGINT NOT NULL UNIQUE,
+    business_name           VARCHAR(200) NOT NULL,
+    account_holder_name     VARCHAR(200) NOT NULL,
+    bank_account_number     VARCHAR(30) NOT NULL,
+    ifsc_code               VARCHAR(15) NOT NULL,
+    bank_name               VARCHAR(150) NOT NULL,
+    pan_number              VARCHAR(15) NOT NULL,
+    phone                   VARCHAR(15) NOT NULL,
+    address                 VARCHAR(500) NOT NULL,
+    status                  VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    applied_at              DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at             DATETIME NULL,
+    rejection_reason        VARCHAR(500) NULL,
+    CONSTRAINT fk_seller_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------
 -- Wishlist and cart. Hibernate will auto-create these on next backend
 -- restart even without running this manually (ddl-auto=update creates new
 -- tables reliably; it's altering existing columns that needs manual SQL).
