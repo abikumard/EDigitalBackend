@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS otp_tokens (
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS content_items (
     id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+    seller_id           BIGINT NULL,
     title               VARCHAR(255) NOT NULL,
     description         TEXT NULL,
     price               DECIMAL(10,2) NOT NULL,
@@ -107,7 +108,8 @@ CREATE TABLE IF NOT EXISTS content_items (
     original_file_name  VARCHAR(255) NULL,
     is_active           TINYINT(1) NOT NULL DEFAULT 1,
     created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_content_seller FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------

@@ -10,6 +10,10 @@ public class ContentItem {
 
     public enum ContentType { VIDEO, PDF, PHOTO }
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id")
+    private Seller seller;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -88,4 +92,7 @@ public class ContentItem {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public Seller getSeller() { return seller; }
+    public void setSeller(Seller seller) { this.seller = seller; }
 }

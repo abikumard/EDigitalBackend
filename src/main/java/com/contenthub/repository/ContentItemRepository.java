@@ -8,4 +8,5 @@ import java.util.List;
 public interface ContentItemRepository extends JpaRepository<ContentItem, Long> {
     List<ContentItem> findByActiveTrueOrderByCreatedAtDesc();
     List<ContentItem> findAllByOrderByCreatedAtDesc();
+    List<ContentItem> findBySeller_IdOrderByCreatedAtDesc(Long sellerId);
 }

@@ -26,7 +26,8 @@ public class ContentDtos {
             boolean purchased,
             LocalDateTime createdAt,
             LocalDateTime purchasedAt,
-            List<ContentFileResponse> extraFiles
+            List<ContentFileResponse> extraFiles,
+            String sellerName
     ) {
         public static ContentResponse of(ContentItem c, boolean purchased) {
             return of(c, purchased, null, List.of());
@@ -38,18 +39,25 @@ public class ContentDtos {
 
         public static ContentResponse of(ContentItem c, boolean purchased, LocalDateTime purchasedAt,
                                           List<ContentFileResponse> extraFiles) {
+            // c.getSeller() is a lazy relation — callers building this from a
+            // list/detail read path must run inside @Transactional(readOnly = true)
+            // (see ContentService) or this throws LazyInitializationException.
+            String sellerName = c.getSeller() != null ? c.getSeller().getBusinessName() : null;
             return new ContentResponse(
                     c.getId(),
                     c.getTitle(),
                     c.getDescription(),
                     c.getPrice(),
                     c.getContentType().name(),
-                    "/api/content/" + c.getId() + "/thumbnail",
+                    // Now a full Cloudinary URL stored directly on the entity —
+                    // no more local-disk indirection through this backend.
+                    c.getThumbnailPath(),
                     c.isActive(),
                     purchased,
                     c.getCreatedAt(),
                     purchasedAt,
-                    extraFiles
+                    extraFiles,
+                    sellerName
             );
         }
     }
