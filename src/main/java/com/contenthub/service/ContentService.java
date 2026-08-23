@@ -8,10 +8,12 @@ import com.contenthub.entity.Purchase;
 import com.contenthub.entity.Seller;
 import com.contenthub.exception.AppExceptions.BadRequestException;
 import com.contenthub.exception.AppExceptions.ResourceNotFoundException;
+import com.contenthub.repository.CartItemRepository;
 import com.contenthub.repository.ContentFileRepository;
 import com.contenthub.repository.ContentItemRepository;
 import com.contenthub.repository.PurchaseRepository;
 import com.contenthub.repository.SellerRepository;
+import com.contenthub.repository.WishlistItemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,17 +35,23 @@ public class ContentService {
     private final ContentItemRepository contentItemRepository;
     private final PurchaseRepository purchaseRepository;
     private final ContentFileRepository contentFileRepository;
+    private final WishlistItemRepository wishlistItemRepository;
+    private final CartItemRepository cartItemRepository;
     private final SellerRepository sellerRepository;
     private final FileStorageService fileStorageService;
 
     public ContentService(ContentItemRepository contentItemRepository,
                            PurchaseRepository purchaseRepository,
                            ContentFileRepository contentFileRepository,
+                           WishlistItemRepository wishlistItemRepository,
+                           CartItemRepository cartItemRepository,
                            SellerRepository sellerRepository,
                            FileStorageService fileStorageService) {
         this.contentItemRepository = contentItemRepository;
         this.purchaseRepository = purchaseRepository;
         this.contentFileRepository = contentFileRepository;
+        this.wishlistItemRepository = wishlistItemRepository;
+        this.cartItemRepository = cartItemRepository;
         this.sellerRepository = sellerRepository;
         this.fileStorageService = fileStorageService;
     }
@@ -244,10 +252,14 @@ public class ContentService {
         contentFileRepository.delete(cf);
     }
 
+    // Admin has full authority over the platform's own catalog — deleting here
+    // is unconditional and also removes any purchase records tied to this
+    // product (customers lose their "My Library" entry for it too). This is a
+    // deliberate admin-only capability; sellerDelete() below does NOT allow this.
     @Transactional
     public void adminDelete(Long id) {
         ContentItem item = getEntityOrThrow(id);
-        contentFileRepository.deleteAll(contentFileRepository.findByContentItem_IdOrderByIdAsc(id));
+        cleanupBeforeDelete(id);
         contentItemRepository.delete(item);
     }
 
@@ -255,8 +267,31 @@ public class ContentService {
     public void sellerDelete(Long sellerId, Long id) {
         ContentItem item = getEntityOrThrow(id);
         requireOwnership(item, sellerId);
-        contentFileRepository.deleteAll(contentFileRepository.findByContentItem_IdOrderByIdAsc(id));
+        guardAgainstRealPurchases(id);
+        cleanupBeforeDelete(id);
         contentItemRepository.delete(item);
+    }
+
+    // A product that real customers have already paid for can't be hard-deleted
+    // by a SELLER — that would destroy their access, their "My Library" entry,
+    // and their purchase record. Deactivating (the "Active" toggle) is the
+    // right way for a seller to pull a purchased product from the store while
+    // honoring existing buyers. Admin can still force this via adminDelete().
+    private void guardAgainstRealPurchases(Long contentId) {
+        if (purchaseRepository.existsByContent_IdAndStatus(contentId, Purchase.Status.SUCCESS)) {
+            throw new BadRequestException(
+                    "This product has already been purchased by at least one customer, so it can't be deleted — " +
+                    "that would break their access. Turn off \"Active\" instead to remove it from the store while " +
+                    "keeping existing buyers' access intact."
+            );
+        }
+    }
+
+    private void cleanupBeforeDelete(Long contentId) {
+        contentFileRepository.deleteAll(contentFileRepository.findByContentItem_IdOrderByIdAsc(contentId));
+        wishlistItemRepository.deleteByContent_Id(contentId);
+        cartItemRepository.deleteByContent_Id(contentId);
+        purchaseRepository.deleteByContent_Id(contentId);
     }
 
     private void requireOwnership(ContentItem item, Long sellerId) {

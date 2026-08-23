@@ -13,6 +13,10 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
     boolean existsByUser_IdAndContent_IdAndStatus(Long userId, Long contentId, Purchase.Status status);
 
+    boolean existsByContent_IdAndStatus(Long contentId, Purchase.Status status);
+
+    void deleteByContent_Id(Long contentId);
+
     Optional<Purchase> findByRazorpayOrderId(String razorpayOrderId);
 
     List<Purchase> findAllByRazorpayOrderId(String razorpayOrderId);
