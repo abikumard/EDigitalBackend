@@ -81,9 +81,9 @@ public class UserService {
         return identifier.indexOf('@') >= 0;
     }
 
-    // Strips spaces/dashes and an optional +91 / 0 prefix, then checks it's a valid 10-digit Indian mobile number.
-    // Returns the clean 10-digit number, or null if it doesn't look like a valid mobile number.
+    // Strips spaces/dashes and an optional +91 / 0 prefix, then normalizes 10-15 digit phone numbers.
     private String normalizeMobile(String raw) {
+        if (raw == null) return null;
         StringBuilder digitsOnly = new StringBuilder();
         for (int i = 0; i < raw.length(); i++) {
             char c = raw.charAt(i);
@@ -99,11 +99,7 @@ public class UserService {
             cleaned = cleaned.substring(1);
         }
 
-        if (cleaned.length() != 10) {
-            return null;
-        }
-        char firstDigit = cleaned.charAt(0);
-        if (firstDigit < '6' || firstDigit > '9') {
+        if (cleaned.length() < 10 || cleaned.length() > 15) {
             return null;
         }
         return cleaned;

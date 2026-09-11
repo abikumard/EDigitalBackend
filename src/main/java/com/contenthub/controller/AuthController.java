@@ -28,9 +28,13 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<MessageResponse> signup(@Valid @RequestBody SignupRequest req) {
-        userService.signup(req.identifier(), req.password(), req.confirmPassword());
-        return ResponseEntity.ok(new MessageResponse("Account created. Please log in to continue."));
+    public ResponseEntity<AuthResponse> signup(@Valid @RequestBody SignupRequest req) {
+        User user = userService.signup(req.identifier(), req.password(), req.confirmPassword());
+        String tokenSubject = user.getEmail() != null ? user.getEmail() : user.getMobile();
+        String token = jwtUtil.generateUserToken(user.getId(), tokenSubject);
+        return ResponseEntity.ok(new AuthResponse(
+                token, user.getId(), user.getEmail(), user.getMobile(), user.getName(), "USER"
+        ));
     }
 
     @PostMapping("/login")
