@@ -1,7 +1,7 @@
 package com.contenthub.entity;
 
 import jakarta.persistence.*;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,6 +19,15 @@ public class Seller {
     @Column(name = "business_name", nullable = false, length = 200)
     private String businessName;
 
+    @Column(name = "pen_name", length = 200)
+    private String penName;
+
+    @Column(name = "bio", columnDefinition = "TEXT")
+    private String bio;
+
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     @Column(name = "account_holder_name", nullable = false, length = 200)
     private String accountHolderName;
 
@@ -31,6 +40,9 @@ public class Seller {
     @Column(name = "bank_name", nullable = false, length = 150)
     private String bankName;
 
+    @Column(name = "upi_id", length = 100)
+    private String upiId;
+
     @Column(name = "pan_number", nullable = false, length = 15)
     private String panNumber;
 
@@ -40,9 +52,18 @@ public class Seller {
     @Column(nullable = false, length = 500)
     private String address;
 
+    @Column(name = "total_earnings", precision = 12, scale = 2)
+    private BigDecimal totalEarnings = BigDecimal.ZERO;
+
+    @Column(name = "paid_out_amount", precision = 12, scale = 2)
+    private BigDecimal paidOutAmount = BigDecimal.ZERO;
+
+    @Column(name = "available_balance", precision = 12, scale = 2)
+    private BigDecimal availableBalance = BigDecimal.ZERO;
+
     // PENDING | APPROVED | REJECTED
     @Column(nullable = false, length = 20)
-    private String status = "PENDING";
+    private String status = "APPROVED";
 
     @Column(name = "applied_at", nullable = false, updatable = false)
     private LocalDateTime appliedAt;
@@ -56,7 +77,10 @@ public class Seller {
     @PrePersist
     protected void onCreate() {
         this.appliedAt = LocalDateTime.now();
-        if (this.status == null) this.status = "PENDING";
+        if (this.status == null) this.status = "APPROVED";
+        if (this.totalEarnings == null) this.totalEarnings = BigDecimal.ZERO;
+        if (this.paidOutAmount == null) this.paidOutAmount = BigDecimal.ZERO;
+        if (this.availableBalance == null) this.availableBalance = BigDecimal.ZERO;
     }
 
     public Long getId() { return id; }
@@ -67,6 +91,15 @@ public class Seller {
 
     public String getBusinessName() { return businessName; }
     public void setBusinessName(String businessName) { this.businessName = businessName; }
+
+    public String getPenName() { return penName != null ? penName : businessName; }
+    public void setPenName(String penName) { this.penName = penName; }
+
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public String getAccountHolderName() { return accountHolderName; }
     public void setAccountHolderName(String accountHolderName) { this.accountHolderName = accountHolderName; }
@@ -80,6 +113,9 @@ public class Seller {
     public String getBankName() { return bankName; }
     public void setBankName(String bankName) { this.bankName = bankName; }
 
+    public String getUpiId() { return upiId; }
+    public void setUpiId(String upiId) { this.upiId = upiId; }
+
     public String getPanNumber() { return panNumber; }
     public void setPanNumber(String panNumber) { this.panNumber = panNumber; }
 
@@ -88,6 +124,15 @@ public class Seller {
 
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+
+    public BigDecimal getTotalEarnings() { return totalEarnings != null ? totalEarnings : BigDecimal.ZERO; }
+    public void setTotalEarnings(BigDecimal totalEarnings) { this.totalEarnings = totalEarnings; }
+
+    public BigDecimal getPaidOutAmount() { return paidOutAmount != null ? paidOutAmount : BigDecimal.ZERO; }
+    public void setPaidOutAmount(BigDecimal paidOutAmount) { this.paidOutAmount = paidOutAmount; }
+
+    public BigDecimal getAvailableBalance() { return availableBalance != null ? availableBalance : BigDecimal.ZERO; }
+    public void setAvailableBalance(BigDecimal availableBalance) { this.availableBalance = availableBalance; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

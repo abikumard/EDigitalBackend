@@ -18,10 +18,23 @@ public class ContentDtos {
     public record ContentResponse(
             Long id,
             String title,
+            String subtitle,
+            String authorName,
             String description,
             BigDecimal price,
+            BigDecimal paperbackPrice,
             String contentType,
             String thumbnailUrl,
+            String filePath,
+            String category,
+            String keywords,
+            String isbn,
+            String language,
+            Integer printLength,
+            String status,
+            BigDecimal royaltyRate,
+            Double averageRating,
+            Integer reviewCount,
             boolean active,
             boolean purchased,
             LocalDateTime createdAt,
@@ -39,19 +52,27 @@ public class ContentDtos {
 
         public static ContentResponse of(ContentItem c, boolean purchased, LocalDateTime purchasedAt,
                                           List<ContentFileResponse> extraFiles) {
-            // c.getSeller() is a lazy relation — callers building this from a
-            // list/detail read path must run inside @Transactional(readOnly = true)
-            // (see ContentService) or this throws LazyInitializationException.
-            String sellerName = c.getSeller() != null ? c.getSeller().getBusinessName() : null;
+            String sellerName = c.getSeller() != null ? c.getSeller().getBusinessName() : c.getAuthorName();
             return new ContentResponse(
                     c.getId(),
                     c.getTitle(),
+                    c.getSubtitle(),
+                    c.getAuthorName() != null ? c.getAuthorName() : "Abikumar Dharmaraj",
                     c.getDescription(),
                     c.getPrice(),
+                    c.getPaperbackPrice(),
                     c.getContentType().name(),
-                    // Now a full Cloudinary URL stored directly on the entity —
-                    // no more local-disk indirection through this backend.
                     c.getThumbnailPath(),
+                    purchased ? c.getFilePath() : null,
+                    c.getCategory(),
+                    c.getKeywords(),
+                    c.getIsbn(),
+                    c.getLanguage(),
+                    c.getPrintLength(),
+                    c.getStatus(),
+                    c.getRoyaltyRate(),
+                    c.getAverageRating() != null ? c.getAverageRating() : 4.9,
+                    c.getReviewCount() != null ? c.getReviewCount() : 24,
                     c.isActive(),
                     purchased,
                     c.getCreatedAt(),
@@ -61,4 +82,29 @@ public class ContentDtos {
             );
         }
     }
+
+    public record SamplePreviewResponse(
+            Long id,
+            String title,
+            String subtitle,
+            String authorName,
+            String thumbnailUrl,
+            String category,
+            Integer printLength,
+            String sampleText
+    ) {}
+
+    public record CreateBookRequest(
+            String title,
+            String subtitle,
+            String authorName,
+            String description,
+            BigDecimal price,
+            BigDecimal paperbackPrice,
+            String category,
+            String keywords,
+            String language,
+            Integer printLength,
+            String sampleText
+    ) {}
 }

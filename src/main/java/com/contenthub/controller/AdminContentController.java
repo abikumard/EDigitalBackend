@@ -1,6 +1,7 @@
 package com.contenthub.controller;
 
 import com.contenthub.dto.CommonDtos.MessageResponse;
+import com.contenthub.dto.ContentDtos.ContentFileResponse;
 import com.contenthub.dto.ContentDtos.ContentResponse;
 import com.contenthub.entity.ContentItem;
 import com.contenthub.exception.AppExceptions.BadRequestException;
@@ -67,7 +68,7 @@ public class AdminContentController {
     }
 
     @PostMapping(value = "/{id}/files", consumes = "multipart/form-data")
-    public ResponseEntity<ContentResponse> addExtraFile(
+    public ResponseEntity<ContentFileResponse> addExtraFile(
             @PathVariable Long id,
             @RequestParam String fileType,
             @RequestParam(required = false) String label,
@@ -78,8 +79,9 @@ public class AdminContentController {
     }
 
     @DeleteMapping("/{id}/files/{fileId}")
-    public ResponseEntity<ContentResponse> removeExtraFile(@PathVariable Long id, @PathVariable Long fileId) {
-        return ResponseEntity.ok(contentService.adminRemoveExtraFile(id, fileId));
+    public ResponseEntity<Void> removeExtraFile(@PathVariable Long id, @PathVariable Long fileId) {
+        contentService.adminRemoveExtraFile(id, fileId);
+        return ResponseEntity.noContent().build();
     }
 
     private ContentItem.ContentType parseType(String value) {

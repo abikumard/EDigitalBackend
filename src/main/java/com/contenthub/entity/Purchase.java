@@ -22,8 +22,18 @@ public class Purchase {
     @JoinColumn(name = "content_id", nullable = false)
     private ContentItem content;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id")
+    private Seller seller;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
+
+    @Column(name = "platform_fee", precision = 10, scale = 2)
+    private BigDecimal platformFee = BigDecimal.ZERO;
+
+    @Column(name = "publisher_royalty", precision = 10, scale = 2)
+    private BigDecimal publisherRoyalty = BigDecimal.ZERO;
 
     @Column(name = "razorpay_order_id", nullable = false, length = 100)
     private String razorpayOrderId;
@@ -64,8 +74,17 @@ public class Purchase {
     public ContentItem getContent() { return content; }
     public void setContent(ContentItem content) { this.content = content; }
 
+    public Seller getSeller() { return seller; }
+    public void setSeller(Seller seller) { this.seller = seller; }
+
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
+
+    public BigDecimal getPlatformFee() { return platformFee; }
+    public void setPlatformFee(BigDecimal platformFee) { this.platformFee = platformFee; }
+
+    public BigDecimal getPublisherRoyalty() { return publisherRoyalty; }
+    public void setPublisherRoyalty(BigDecimal publisherRoyalty) { this.publisherRoyalty = publisherRoyalty; }
 
     public String getRazorpayOrderId() { return razorpayOrderId; }
     public void setRazorpayOrderId(String razorpayOrderId) { this.razorpayOrderId = razorpayOrderId; }
